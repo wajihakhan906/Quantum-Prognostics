@@ -1,0 +1,9 @@
+qiskit>=1.2
+qiskit-machine-learning>=0.8
+torch>=2.1
+numpy
+scipy
+scikit-learn
+pandas
+matplotlib
+pylatexenc
