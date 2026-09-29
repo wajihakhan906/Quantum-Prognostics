@@ -8,7 +8,7 @@ Quantum and hybrid quantum–classical machine learning for **bearing fault diag
 ## Models
 | Task | Quantum / hybrid | Classical baselines |
 |---|---|---|
-| Fault diagnosis (4 classes) | **QSVM** (fidelity quantum kernel), **VQC**, **QNN** (EstimatorQNN), **HQCNN** | SVM, Random Forest, MLP, ELM, Softmax |
+| Fault diagnosis (4 classes) | **QSVM** with amplitude encoding (as in the paper) or ZZ angle encoding, **VQC**, **QNN** (EstimatorQNN), **HQCNN** | SVM, Random Forest, MLP, ELM, Softmax |
 | RUL regression | **QSVR** (quantum kernel), **HQCNN** | SVR, Random Forest, MLP |
 
 **Pipeline**: vibration windows → 13 time/frequency features (RMS, kurtosis, crest/shape/impulse/clearance factors,
@@ -22,7 +22,7 @@ Quantum-Prognostics/
 ├── Code/
 │   ├── data.py                  # CWRU / XJTU-SY loaders, windowing, synthetic test signals
 │   ├── features.py              # vibration features, PCA + angle encoding
-│   ├── quantum_models.py        # QSVM, QSVR, VQC, QNN, HQCNN
+│   ├── quantum_models.py        # QSVM (amplitude / ZZ), QSVR, VQC, QNN, HQCNN
 │   ├── classical_models.py      # SVM/SVR, RF, MLP, ELM, Softmax
 │   ├── run_fault_diagnosis.py   # classification benchmark
 │   ├── run_rul.py               # RUL benchmark

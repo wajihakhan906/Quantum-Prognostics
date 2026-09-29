@@ -74,3 +74,47 @@ class HQCNN(nn.Module):
         angles = (self.cnn(x.unsqueeze(1)) + 1) * (np.pi / 2)  # [-1, 1] -> [0, pi]
         out = self.head(self.quantum(angles))
         return torch.sigmoid(out).squeeze(-1) if self.regression else out
+
+
+# --------------------------------------------------------------------------- #
+# Amplitude-encoded QSVM (features stored in the 2^n amplitudes of n qubits)
+# --------------------------------------------------------------------------- #
+def amplitude_state_circuit(x):
+    """State-preparation circuit |x> = sum_i x_i/||x|| |i> (pads to the next power of two)."""
+    from qiskit.circuit.library import StatePreparation
+
+    dim = 1 << max(1, int(np.ceil(np.log2(len(x)))))
+    v = np.zeros(dim)
+    v[: len(x)] = x
+    v = v / np.linalg.norm(v)
+    qc = QuantumCircuit(int(np.log2(dim)))
+    qc.append(StatePreparation(v), qc.qubits)
+    return qc
+
+
+class AmplitudeQSVC:
+    """QSVM with amplitude encoding. The statevector fidelity kernel |<x|x'>|^2 of two
+    amplitude-encoded states equals (x . x' / (||x|| ||x'||))^2, which is evaluated exactly here;
+    on hardware the same kernel is estimated with `amplitude_state_circuit` + a swap/compute-uncompute test.
+    """
+
+    def __init__(self, C=10.0):
+        from sklearn.svm import SVC
+
+        self.svc = SVC(kernel="precomputed", C=C)
+
+    @staticmethod
+    def _unit(X):
+        X = np.asarray(X, dtype=float)
+        return X / (np.linalg.norm(X, axis=1, keepdims=True) + 1e-12)
+
+    def kernel(self, A, B):
+        return (self._unit(A) @ self._unit(B).T) ** 2
+
+    def fit(self, X, y):
+        self.X_ = np.asarray(X, dtype=float)
+        self.svc.fit(self.kernel(self.X_, self.X_), y)
+        return self
+
+    def predict(self, X):
+        return self.svc.predict(self.kernel(X, self.X_))

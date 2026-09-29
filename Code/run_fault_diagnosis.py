@@ -16,7 +16,7 @@ from sklearn.model_selection import train_test_split
 from classical_models import classifiers
 from data import load_cwru, synthetic_cwru
 from features import angle_encoder, extract_features
-from quantum_models import HQCNN, make_qnn_classifier, make_qsvc, make_vqc
+from quantum_models import HQCNN, AmplitudeQSVC, make_qnn_classifier, make_qsvc, make_vqc
 
 
 def train_hqcnn(Xtr, ytr, Xte, n_qubits, n_classes, epochs):
@@ -55,16 +55,19 @@ def main():
     enc = angle_encoder(args.qubits).fit(Ftr)
     Qtr, Qte = enc.transform(Ftr), enc.transform(Fte)
     Str, Ste = enc.named_steps["std"].transform(Ftr), enc.named_steps["std"].transform(Fte)
+    # amplitude encoding: all 13 features (+ offset) -> 16 amplitudes of 4 qubits
+    Atr, Ate = (np.column_stack([S, np.ones(len(S))]) for S in (Str, Ste))
 
     models = {name: ("classical", m) for name, m in classifiers().items()}
     models |= {"QSVM": ("quantum", make_qsvc(args.qubits)),
                "VQC": ("quantum", make_vqc(args.qubits, len(classes))),
-               "QNN": ("quantum", make_qnn_classifier(args.qubits, len(classes)))}
+               "QNN": ("quantum", make_qnn_classifier(args.qubits, len(classes))),
+               "QSVM (amplitude)": ("amplitude", AmplitudeQSVC())}
 
     results = {}
     for name, (kind, model) in models.items():
         t0 = time.time()
-        a, b = (Qtr, Qte) if kind == "quantum" else (Str, Ste)
+        a, b = {"quantum": (Qtr, Qte), "amplitude": (Atr, Ate)}.get(kind, (Str, Ste))
         model.fit(a, ytr)
         pred = np.asarray(model.predict(b)).ravel()
         results[name] = {"accuracy": accuracy_score(yte, pred), "f1_macro": f1_score(yte, pred, average="macro"),
