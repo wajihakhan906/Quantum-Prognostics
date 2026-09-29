@@ -51,7 +51,7 @@ python run_rul.py --train ../Dataset/XJTU-SY/35Hz12kN/Bearing1_1 ../Dataset/XJTU
 
 ## Author
 **Wajiha Rahim Khan**  
-[Google Scholar](https://scholar.google.com/citations?user=ctvOkbYAAAAJ) · [Email](mailto:wajihakhan906@gmail.com)
+[Google Scholar](https://scholar.google.com/citations?user=ctvOkbYAAAAJ)
 
 ## License
 MIT. See [LICENSE](LICENSE).
